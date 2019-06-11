@@ -1,7 +1,7 @@
 Package: BiocRnaHap
 Title: explore RNA-seq based haplotyping using Phaser
 Description: Explore RNA-seq based haplotyping using Phaser.
-Version: 0.0.0
+Version: 0.0.1
 Author: Vince Carey
 Suggests: knitr, testthat
 Depends: R (>= 3.5.0), VariantAnnotation

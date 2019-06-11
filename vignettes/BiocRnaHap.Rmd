@@ -39,6 +39,9 @@ libstats = function(inisess, newsess) {
 } # END OF LIB REWRITE
 library(BiocRnaHap)
 library(DT)
+library(ggplot2)
+library(dplyr)
+library(geuvPack)
 ```
 
 # Introduction
@@ -55,6 +58,9 @@ haplotypes composed of 2-5 SNPs.
 ```{r lk1}
 # library(BiocRnaHap)
 # library(DT)
+# library(geuvPack)
+# library(dplyr)
+# library(ggplot2)
 subto4 = subset(NA06986_rnahaps, variants >=2 & variants <= 5)
 subto4 = subto4[order(subto4$reads_total, decreasing=TRUE),]
 datatable(subto4[1:100,])
@@ -88,4 +94,30 @@ Of interest is the collection of 3-SNP configurations.
 ```{r lkconf}
 table(glk$GT[1,], glk$GT[2,], glk$GT[3,])
 ```
+
+# Using the SNP configurations to parse expression in GEUVADIS
+
+```{r lkgeuv}
+geneToCheck = "RCAN3" # 'close' to SNPs
+glkg = glk$GT
+if (!exists("geuFPKM")) data(geuFPKM)
+mm = geuFPKM[, intersect(colnames(glkg), colnames(geuFPKM))]
+mm
+elem = apply(glkg,2,paste, collapse=":")
+gind = grep("RCAN3", rowData(geuFPKM)$gene_name)
+quant = as.numeric(log(assay(mm[gind,])+1))
+newdf = data.frame(quant=quant, hap=elem[colnames(mm)], 
+   stringsAsFactors=FALSE)
+squant = split(quant, elem[colnames(mm)])
+mor = sapply(squant, median)
+hc = newdf %>% select(hap) %>% group_by(hap) %>% summarise(n=n())
+okh = hc[hc$n > 2, 1]
+newdf = newdf[newdf$hap %in% okh$hap,]
+gg = ggplot(newdf, aes(x=factor(hap), y=quant, colour=factor(hap))) + 
+   geom_boxplot() + geom_point() + ggtitle("RCAN expression") +
+   xlab(paste0(myv, collapse=", "))
+gg
+```
+
+# References
 
