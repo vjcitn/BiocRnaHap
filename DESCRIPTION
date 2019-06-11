@@ -1,0 +1,17 @@
+Package: BiocRnaHap
+Title: explore RNA-seq based haplotyping using Phaser
+Description: Explore RNA-seq based haplotyping using Phaser.
+Version: 0.0.0
+Author: Vince Carey
+Suggests: knitr, testthat
+Depends: R (>= 3.5.0), VariantAnnotation
+Imports: GenomicRanges, BiocGenerics, IRanges, rjson,
+	httr, rtracklayer, GenomeInfoDb, DelayedArray
+Maintainer: VJ Carey <stvjc@channing.harvard.edu>
+License: Artistic-2.0
+LazyLoad: yes
+LazyData: yes
+biocViews: variants
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
+Encoding: UTF-8

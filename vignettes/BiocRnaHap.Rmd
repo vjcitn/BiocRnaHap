@@ -1,0 +1,91 @@
+---
+title: "Hackathon on RNA-haplotypes ... using Castel's et al. phaser"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{RNA-haplotype exploration}
+  %\VignetteEncoding{UTF-8}
+output:
+  BiocStyle::html_document:
+    highlight: pygments
+    number_sections: yes
+    theme: united
+    toc: yes
+bibliography: BiocRnaHap.bib
+---
+```{r setup, echo=FALSE}
+library = function(...) {  # QUIET DOWN MESSAGES ON PACKAGE LOADING
+libstats = function(inisess, newsess) {
+ inibase = inisess$basePkgs  # unchanging?
+ inioth = names(inisess$otherPkgs)
+ newbase = newsess$basePkgs
+ newoth = names(newsess$otherPkgs)
+ iniatt = length(unique(c(inibase,inioth)))
+ newatt = length(unique(c(newbase,newoth)))
+ addatt = newatt-iniatt
+ inilo = names(inisess$loadedOnly)
+ newlo = names(newsess$loadedOnly)
+ addlo = length(setdiff(newlo, inilo))
+ c(addatt=addatt, addlo=addlo)
+}
+ inisess = sessionInfo()
+ suppressPackageStartupMessages({
+  libdata = base::library(...)
+  newsess = sessionInfo()
+  lstats = libstats(inisess=inisess, newsess=newsess)
+  message(sprintf("%d/%d packages newly attached/loaded, see sessionInfo() for details.", lstats["addatt"], lstats["addlo"]))
+  invisible(NULL)
+ })
+} # END OF LIB REWRITE
+library(BiocRnaHap)
+library(DT)
+```
+
+# Introduction
+
+This package is devoted to systematically organizing results
+from applications of phaser (@Castel2016) to RNA-seq runs.
+
+# The tutorial example
+
+This table illustrates basic output of phaser.
+We get a small number of records with proposed
+haplotypes composed of 2-5 SNPs.
+
+```{r lk1}
+# library(BiocRnaHap)
+# library(DT)
+subto4 = subset(NA06986_rnahaps, variants >=2 & variants <= 5)
+subto4 = subto4[order(subto4$reads_total, decreasing=TRUE),]
+datatable(subto4[1:100,])
+```
+
+We sorted the table rows by
+'reads_total' after limiting for rows
+with 3-4 variants.  Note that this vignette
+reports just
+a slice of the table so restricted.
+
+# Bridging to population data
+
+We will obtain a view of 1000 genomes SNP calls and examine
+distributions of identified 'compound heterozygotes'.  
+We picked a group of three SNP that have 373 total reads.
+
+`look1kg` will use the Ensembl REST API to get SNP
+locations on GRCh38, and by default will lift over to
+hg19.
+
+
+```{r lkpr}
+myv = c("rs2227312", "rs2227313", "rs4870")
+lk1 = look1kg(myv)
+class(lk1)
+glk = geno(lk1)
+glk[,1:6]
+```
+Of interest is the collection of 3-SNP configurations.
+```{r lkconf}
+table(glk$GT[1,], glk$GT[2,], glk$GT[3,])
+```
+
