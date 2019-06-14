@@ -21,6 +21,14 @@ look1kg(rsids = c("rs71503074", "rs71503075", "rs12084944"),
 \description{
 query 1000 genomes genotypes at pairs of SNP
 }
+\note{
+Typically SNPs are identified by rs number, but there are
+some workstreams in which they come back as snp_cc_lllll where cc
+is a chromosome identifier and lllll is a location.  We parse
+the 'rsids' input for '^snp' and if we find this we skip
+the step of resolving the rsid to genomic coordinates, using
+the cc and lllll for location.
+}
 \examples{
 lk2 = look1kg(c("rs71503074","rs71503075","rs12084944"))
 table(geno(lk2)$GT[1,], geno(lk2)$GT[2,], geno(lk2)$GT[3,])
