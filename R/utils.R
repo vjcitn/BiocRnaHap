@@ -120,3 +120,48 @@ variant_options = function(sym="ORMDL3", radius=50000, rna_hap_tab=NA06986_rnaha
  strsplit(ans, ",")
 }
 
+setClass("HapTab", representation(table="data.frame",
+  source="character"))
+#' encapsulate phaser output text tables
+#' @param datfr data.frame instance importing 'haplotypes.txt'
+#' @param source character(1) tag characterizing origin
+#' @examples
+#' HapTab(NA06986_rnahaps, "phaser NA06986")
+#' @export
+HapTab = function(datfr, source)
+ new("HapTab", table=datfr, source=source)
+setMethod("show", "HapTab", function(object) {
+ cat(sprintf("HapTab with %s records, source: %s\n",
+    nrow(object@table), object@source))
+})
+
+setClass("RnaHapSet", representation(
+  genesym = "character",
+  radius = "numeric",
+  haplist = "list",
+  source = "HapTab"))
+#' encapsulate a list of SNP configurations produced as haplotypes by phaser
+#' @param genesym character(1) symbol
+#' @param radius numeric(1) region around gene to include
+#' @param haplist a list as returned by `variant_options`
+#' @param source a HapTab instance
+#' @examples
+#' ht = HapTab(NA06986_rnahaps, "phaser NA06986")
+#' RnaHapSet("ORMDL3", radius=50000, source=ht, 
+#'     haplist=variant_options("ORMDL3", 50000))
+#' @export
+RnaHapSet = function(genesym, radius, source,
+   haplist=variant_options(genesym, radius)) {
+ new("RnaHapSet", genesym=genesym, radius=radius, haplist=haplist,
+       source=source)
+}
+setMethod("show", "RnaHapSet", function(object) {
+ cat(sprintf("RnaHapSet for gene %s (radius %s):\n", 
+      object@genesym, object@radius))
+ cat(sprintf(" there are %s haplotypes.\n", length(object@haplist)))
+ ii = lapply(object@haplist, paste, collapse=":")
+ jj = lapply(ii, function(x) paste0(x, ", "))
+ hapegs = do.call(paste0, jj)
+ if (nchar(hapegs)>55) hapegs = paste0(substr(hapegs, 1, 55), "...")
+ cat("    ", hapegs, "\n")
+})

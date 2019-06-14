@@ -7,7 +7,7 @@
 look1kg(rsids = c("rs71503074", "rs71503075", "rs12084944"),
   ch = BiocRnaHap::ch38to19,
   src = "http://1000genomes.s3.amazonaws.com/release/20130502/ALL.\%s.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-  rsonly = TRUE)
+  rsonly = TRUE, snvonly = TRUE)
 }
 \arguments{
 \item{rsids}{character vector}
@@ -17,6 +17,8 @@ look1kg(rsids = c("rs71503074", "rs71503075", "rs12084944"),
 \item{src}{character(1) sprintf template for 1000 genomes vcf, chr[nn] to be supplied for pct-s}
 
 \item{rsonly}{logical(1), exclude 'esv' records}
+
+\item{snvonly}{logical(1), exclude records with nchar(REF)>1}
 }
 \description{
 query 1000 genomes genotypes at pairs of SNP

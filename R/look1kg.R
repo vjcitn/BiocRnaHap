@@ -9,6 +9,7 @@
 #' @param ch chain object from rtracklayer
 #' @param src character(1) sprintf template for 1000 genomes vcf, chr[nn] to be supplied for pct-s
 #' @param rsonly logical(1), exclude 'esv' records
+#' @param snvonly logical(1), exclude records with nchar(REF)>1
 #' @note Typically SNPs are identified by rs number, but there are
 #' some workstreams in which they come back as snp_cc_lllll where cc
 #' is a chromosome identifier and lllll is a location.  We parse
@@ -23,7 +24,7 @@ look1kg = function(rsids=c("rs71503074","rs71503075","rs12084944"),
     ch = BiocRnaHap::ch38to19,
     src=
     "http://1000genomes.s3.amazonaws.com/release/20130502/ALL.%s.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-    rsonly=TRUE) {
+    rsonly=TRUE, snvonly=TRUE) {
   isrs = grep("^rs", rsids[1])
   if (length(isrs)==1) {
     suppressMessages({
@@ -42,10 +43,14 @@ look1kg = function(rsids=c("rs71503074","rs71503075","rs12084944"),
   seqlevels(mygr) = gsub("chr", "", seqlevels(mygr))
   p = ScanVcfParam(which=mygr)
   ans = readVcf(src, param=p)
+  gr = rowRanges(ans)
   if (rsonly) {
-    gr = rowRanges(ans)
     ok = grep("^rs", names(gr))
     ans = ans[ok,]
+  }
+  if (snvonly) {
+    indels = which(lengths(gr$REF)!=1)
+    if (length(indels)>0) ans = ans[-indels,]
   }
   ans
 }
