@@ -3,7 +3,7 @@ Title: explore RNA-seq based haplotyping using Phaser
 Description: Explore RNA-seq based haplotyping using Phaser.
 Version: 0.0.2
 Author: Vince Carey
-Suggests: knitr, testthat
+Suggests: knitr, testthat, geuvPack
 Depends: R (>= 3.5.0), VariantAnnotation
 Imports: GenomicRanges, BiocGenerics, IRanges, rjson,
 	httr, rtracklayer, GenomeInfoDb, DelayedArray

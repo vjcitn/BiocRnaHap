@@ -2,6 +2,7 @@
 
 export(ensRsLoc)
 export(filter_haptab)
+export(geuvEvH)
 export(look1kg)
 export(rnahapsNearGene)
 importFrom(BiocGenerics,path)

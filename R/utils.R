@@ -65,3 +65,44 @@ rnahapsNearGene = function(sym, haptab=NA06986_rnahaps,
  chk = subsetByOverlaps(haptab_gr_filt, genes[ind]+radius)
  chk[which(chk$reads_total>=min_total_reads & chk$variants >= min_variants)]
 }
+#' compute a data.frame with GEUVADIS expression for a selected gene
+#' and associated haplotypes formed using entries in snps
+#' @note it is assumed that the entries in `snps` are elements of
+#' a 'long-range' RNA-based haplotype as
+#' inferred by phaser
+#' @param sym a character(1) gene symbol
+#' @param snps a vector of SNP identifiers
+#' @examples
+#' requireNamespace("geuvPack")
+#' if (!exists("geuFPKM")) {
+#'   require(geuvPack)
+#'   data(geuFPKM)
+#'   }
+#' tab = geuvEvH(vcf=BiocRnaHap::gsd_vcf)
+#' head(tab)
+#' require(ggplot2)
+#' ggplot(tab, aes(x=haplotypes, y=exprs, colour=popcode)) + 
+#'   geom_boxplot(aes(group=haplotypes), outlier.size=0) + 
+#'   geom_jitter() 
+#' @export
+geuvEvH = function (sym = "GSDMB", snps = c("rs2305480", "rs2305479"), 
+   vcf = NULL, ...) 
+{
+    if (!exists("geuFPKM")) 
+        stop("load geuvPack and data(geuFPKM) to use this function")
+    ind = grep(sym, rowData(geuFPKM)$gene_name)
+    stopifnot(length(ind) > 0)
+    if (length(ind) > 1) 
+        warning("multiple quantifications for requested gene, using first available")
+    ex = log(assay(geuFPKM[ind, ]) + 1)
+    names(ex) = colnames(geuFPKM)
+    if (is.null(vcf)) vcf = look1kg(snps)
+    gtvec = apply(geno(vcf)$GT, 2, paste, collapse = ":")
+    okids = intersect(colnames(geuFPKM), names(gtvec))
+    ex = as.numeric(ex[okids])
+    names(ex) = okids
+    pc = geuFPKM[,okids]$popcode
+    data.frame(ids = okids, exprs = ex, haplotypes = gtvec[okids], 
+        gene = sym, popcode=pc)
+}
+
