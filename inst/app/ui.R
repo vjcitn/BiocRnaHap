@@ -1,5 +1,9 @@
 load("genes_avail.rda")
 library(shiny)
+
+# the comment* strings here set up the 'about' tab
+# with embedded hyperlinks
+
 comment = "This app is a prototype of a general approach to
 exploring RNA-seq-derived haplotypes.  We use the output
 of the"
@@ -24,16 +28,6 @@ from a single individual, NA06986, and the expression and
 genotype data are obtained for a subset of the cell lines
 studied in GEUVADIS."
 
-comment2 = "The subset of genes presented in the app is obtained using the
-'nearest' gene to each declared RNA haplotype, as defined in the
-GenomicRanges package.  The purpose of this filtering is to 
-reduce the number of gene symbols that need to be presented.
-Users interested in haplotypes present in a given genomic
-region should pick a gene near that region and use the radius
-parameter to incorporate the region of interest.  (It is possible
-that a SNP-oriented, or coordinate-oriented interface will be
-added in future versions of this app.)"
-
 comment3 = "The haplotypes presented are those with
 2-6 SNPs, and total read count supporting haplotype at least 15.
 These filtering parameters are controlled via BiocRnaHaps::rnahapsNearGene."
@@ -41,6 +35,7 @@ These filtering parameters are controlled via BiocRnaHaps::rnahapsNearGene."
 comment4 = "At this time the haplotypes are limited to those
 derived in the example dataset described in the phASER tutorial,
 for HapMap participant NA06986."
+
 ui = fluidPage(
  sidebarLayout(
   sidebarPanel(
@@ -51,8 +46,8 @@ inferred haplotypes with expression data.  Specifically, gene symbol
 processing takes time, wait until the selector box below has a
 white background."),
 #   uiOutput("selector"),
-   selectInput("gene", "gene", choices=genes_avail, selected="ORMDL3"),
-   #textInput("gene", "gene", value="ORMDL3"),
+#   selectInput("gene", "gene", choices=genes_avail, selected="ORMDL3"),
+   textInput("gene", "gene", value="ORMDL3"),
    numericInput("radius", "radius", 100000, 
      min=0, max=500000, step=50000),
    textOutput("selnum"),
@@ -74,7 +69,6 @@ a(href='https://github.com/NCBI-Hackathons/Computational_Medicine_1',
              helpText(comment1a), 
              plotOutput("demoplot"),
              helpText(comment1b), 
-#             helpText(comment2),   # obsolete with genes_avail selectize
              helpText(comment3), 
              helpText(comment4), 
              verbatimTextOutput("sessinf"))

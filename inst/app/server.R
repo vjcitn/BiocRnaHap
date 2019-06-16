@@ -1,12 +1,28 @@
+# ad hoc code here to 'speed up' app performance
+
 library(shiny)
-library(geuvPack)
-if (!exists("geuFPKM")) data(geuFPKM)
+load("geuFPKM.rda")
 library(ggplot2)
-library(BiocRnaHap)
+library(GenomicRanges)
+library(VariantAnnotation)
+source("look1kg.R")
 library(magrittr)
 library(dplyr)
-#allg = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75)$gene_name
+
+
+load("genegr.rda")
+allg = genegr$gene_name
 load("genes_avail.rda")
+
+# in this section we filter down the phASER input table
+
+varnum_to_use = 2:6
+haptab = BiocRnaHap::NA06986_rnahaps
+haptab_gr = GenomicRanges::GRanges(haptab$contig, 
+              IRanges::IRanges(haptab$start, haptab$stop))
+mcols(haptab_gr) = haptab[,-c(1:4)]
+haptab_gr_filt = haptab_gr[haptab_gr$variants %in% varnum_to_use]
+haptab_gr_filt = haptab_gr_filt[ grep("^rs", haptab_gr_filt$variant_ids)]
     
 server = function(input, output, session) {
 #
@@ -44,7 +60,12 @@ server = function(input, output, session) {
  
  goodtab = reactive({
   validate(need(input$gene %in% genes_avail, "enter a valid gene symbol"))
-  nrtab_gr = rnahapsNearGene(input$gene, radius=input$radius)
+  ind = grep(input$gene, genegr$gene_name, fixed=TRUE)
+  if (length(ind)>1) {
+     warning("multiple instances of symbol found, using first")
+     showNotification("multiple instances of symbol found, using first")
+     }
+  nrtab_gr = subsetByOverlaps(haptab_gr_filt, genegr[ind]+input$radius)
  })
 #
  output$tab1 = DT::renderDataTable({
@@ -76,7 +97,9 @@ server = function(input, output, session) {
 
 
  observeEvent(input$tab1_rows_selected, {
-   tab = rnahapsNearGene(input$gene, radius=input$radius)
+#   tab = BiocRnaHap::rnahapsNearGene(input$gene, radius=input$radius,
+#    haptab=BiocRnaHap::NA06986_rnahaps)
+   tab = goodtab()
    tab = as.data.frame(tab)
 #print(tab)
    pick = as.character(tab[ input$tab1_rows_selected, "variant_ids" ])
@@ -105,13 +128,9 @@ print(oksn)
 #save(newdf, file="newdf.rda")
    gg = ggplot(newdf, aes(x=factor(hap), y=quant)) + 
      geom_boxplot(data=newdf, aes(x=factor(hap)), outlier.size=0) + geom_jitter(aes(colour=pop)) + 
-     ggtitle(paste(input$gene, "expression")) +
+     ggtitle(paste(input$gene, "expression in GEUVADIS")) +
      xlab(paste0(snvec, collapse=", ")) + 
        theme(axis.text.x=element_text(angle=45, hjust=1))
-#
-   pdf("abc.pdf")
-   gg
-   dev.off()
    output$box = renderPlot(gg)
    })
  output$sessinf = renderPrint({

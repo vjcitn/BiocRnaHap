@@ -27,6 +27,9 @@ rnahapsNearGene(sym, haptab = NA06986_rnahaps,
 \description{
 produce a GRanges with RNA haplotypes near a specific gene
 }
+\note{
+grep() is used with fixed=TRUE to find sym in genes()$gene_name
+}
 \examples{
 rnahapsNearGene("GSDMB")
 }

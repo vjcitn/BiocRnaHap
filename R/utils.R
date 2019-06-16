@@ -6,33 +6,36 @@
 #library(magrittr)
 #library(dplyr)
 #
-#genegr = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75)
 #allg = sort(genegr$gene_name)
 
 # varnum_to_use = 2:6
 # haptab = NA06986_rnahaps
 
 #' produce a filtered RNA-haplotype table as GRanges, limiting
-#' to SNP-sets of specific cardinality and providing a set
+#' to SNP-sets of specific cardinality and (optionally) providing a set
 #' of gene ranges 'nearest' to the initial SNP
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
 #' @param haptab data.frame corresponding to phaser haplotypes.txt table
 #' @param genegr a GRanges with gene ranges
 #' @param varnum_to_use the values of the 'variants' field for which records are retained
+#' @param useNearestRubric logical(1) defaults to FALSE
 #' @examples
 #' head(filter_haptab())
 #' @export
 filter_haptab = function(haptab=BiocRnaHap::NA06986_rnahaps,
    genegr = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75),
-   varnum_to_use=2:6) {
+   varnum_to_use=2:6, useNearestRubric=FALSE) {
  haptab_gr = GenomicRanges::GRanges(haptab$contig, 
               IRanges::IRanges(haptab$start, haptab$stop))
  mcols(haptab_gr) = haptab[,-c(1:4)]
  haptab_gr_filt = haptab_gr[haptab_gr$variants %in% varnum_to_use]
  haptab_gr_filt = haptab_gr_filt[ grep("^rs", haptab_gr_filt$variant_ids)]
- gn = genegr[nearest(haptab_gr_filt, genegr)]
- gn = gn[which(nchar(gn$gene_name)>0)]
+ if (useNearestRubric) {
+      gn = genegr[nearest(haptab_gr_filt, genegr)]
+      gn = gn[which(nchar(gn$gene_name)>0)]
+      }
+ else gn = genegr
  list(haptab_filt = haptab_gr_filt, genes_near=gn)
 }
 

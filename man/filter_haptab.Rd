@@ -3,12 +3,12 @@
 \name{filter_haptab}
 \alias{filter_haptab}
 \title{produce a filtered RNA-haplotype table as GRanges, limiting
-to SNP-sets of specific cardinality and providing a set
+to SNP-sets of specific cardinality and (optionally) providing a set
 of gene ranges 'nearest' to the initial SNP}
 \usage{
 filter_haptab(haptab = BiocRnaHap::NA06986_rnahaps,
   genegr = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75),
-  varnum_to_use = 2:6)
+  varnum_to_use = 2:6, useNearestRubric = FALSE)
 }
 \arguments{
 \item{haptab}{data.frame corresponding to phaser haplotypes.txt table}
@@ -16,10 +16,12 @@ filter_haptab(haptab = BiocRnaHap::NA06986_rnahaps,
 \item{genegr}{a GRanges with gene ranges}
 
 \item{varnum_to_use}{the values of the 'variants' field for which records are retained}
+
+\item{useNearestRubric}{logical(1) defaults to FALSE}
 }
 \description{
 produce a filtered RNA-haplotype table as GRanges, limiting
-to SNP-sets of specific cardinality and providing a set
+to SNP-sets of specific cardinality and (optionally) providing a set
 of gene ranges 'nearest' to the initial SNP
 }
 \examples{
