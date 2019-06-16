@@ -5,6 +5,8 @@ library(ggplot2)
 library(BiocRnaHap)
 library(magrittr)
 library(dplyr)
+#allg = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75)$gene_name
+load("genes_avail.rda")
     
 server = function(input, output, session) {
 #
@@ -17,44 +19,58 @@ server = function(input, output, session) {
 # methods of filtering genes would be reasonable -- we
 # just don't want to have to deal with them all
 #
-observe({
- filter_method = "overlaps"
-# filter_method = "nearest"
- filter_radius = 10000
- 
- genegr = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75)
- allg = sort(genegr$gene_name)
- varnum_to_use = 2:6
- haptab = NA06986_rnahaps
- haptab_gr = GRanges(haptab$contig, IRanges(haptab$start, haptab$stop))
- mcols(haptab_gr) = haptab[,-c(1:4)]
- haptab_gr_filt = haptab_gr[haptab_gr$variants %in% varnum_to_use]
- haptab_gr_filt = haptab_gr_filt[ grep("^rs", haptab_gr_filt$variant_ids)]
- if (filter_method == "nearest")
-    gn = genegr[nearest(haptab_gr_filt, genegr)]
- else gn = subsetByOverlaps(genegr, haptab_gr_filt+filter_radius)
- print(length(gn))
- chs = sort(gn$gene_name)
- updateSelectInput(session, "gene", "gene", choices=chs, selected="GSDMB")
- })
+#observe({
+# showNotification("setting up gene list", id="setupg")
+# filter_method = "overlaps"
+## filter_method = "nearest"
+# filter_radius = 10000
+# 
+# genegr = ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75)
+# allg = sort(genegr$gene_name)
+# varnum_to_use = 2:6
+# haptab = NA06986_rnahaps
+# haptab_gr = GRanges(haptab$contig, IRanges(haptab$start, haptab$stop))
+# mcols(haptab_gr) = haptab[,-c(1:4)]
+# haptab_gr_filt = haptab_gr[haptab_gr$variants %in% varnum_to_use]
+# haptab_gr_filt = haptab_gr_filt[ grep("^rs", haptab_gr_filt$variant_ids)]
+# if (filter_method == "nearest")
+#    gn = genegr[nearest(haptab_gr_filt, genegr)]
+# else gn = subsetByOverlaps(genegr, haptab_gr_filt+filter_radius)
+# #print(length(gn))
+# chs = sort(gn$gene_name)
+# removeNotification(id="setupg")
+# updateSelectInput(session, "gene", "gene", choices=chs, selected="GSDMB")
+# })
  
  goodtab = reactive({
+  validate(need(input$gene %in% genes_avail, "enter a valid gene symbol"))
   nrtab_gr = rnahapsNearGene(input$gene, radius=input$radius)
  })
 #
  output$tab1 = DT::renderDataTable({
   nrtab_gr = goodtab()
-  cbind(gene=input$gene, radius=input$radius, as.data.frame(nrtab_gr))
+  validate(need(length(nrtab_gr)>0, "increase radius"))
+  basic = cbind(gene=input$gene, radius=input$radius, as.data.frame(nrtab_gr))
+  basic[,c("gene", "radius", "variant_ids", "variant_alleles", "reads_total",
+    "reads_hap_a", "reads_hap_b", "seqnames", "start", "end", "strand")]
   })
+ 
+ output$vcfGrab = renderUI({
+   validate(need(input$tab1_rows_selected, "Click on a row"))
+   tabPanel("VCF", verbatimTextOutput("snps"))
+   })
  output$snps = renderPrint({
+   validate(need(input$tab1_rows_selected, "Click on a row in haps tab"))
+   showNotification("interrogating VCF", id="chkvcf")
    tab = goodtab()
    tab = as.data.frame(tab)
    pick = as.character(tab[ input$tab1_rows_selected, "variant_ids" ])
    snvec = strsplit(pick, ",")
+   removeNotification(id="chkvcf")
    look1kg(snvec[[1]])
   })
  output$selnum = renderText({
-  validate(need(input$tab1_rows_selected, "pick a row"))
+  validate(need(input$tab1_rows_selected, "Click on a row"))
   input$tab1_rows_selected
  })
 
@@ -68,14 +84,16 @@ observe({
    snvec = strsplit(pick, ",")
 #print(snvec)
    myvcf = look1kg(snvec[[1]])
+   oksn = names(rowRanges(myvcf))
+print(oksn)
    glkg = geno(myvcf)$GT
    mm = geuFPKM[, intersect(colnames(glkg), colnames(geuFPKM))]
    elem = apply(glkg,2,paste, collapse=":")
-   gind = grep(input$gene, rowData(geuFPKM)$gene_name)[1]
+   gind = grep(input$gene, rowData(geuFPKM)$gene_name, fixed=TRUE)[1]
    validate(need(length(gind)>0, 
       "please pick a gene assayed in GEUVADIS"))
    quant = as.numeric(log(assay(mm[gind,])+1))
-   newdf = data.frame(quant=quant, hap=elem[colnames(mm)], 
+   newdf = data.frame(quant=quant, hap=elem[colnames(mm)], pop=mm$popcode,
         stringsAsFactors=FALSE)
    squant = split(quant, elem[colnames(mm)])
    mor = sapply(squant, median)
@@ -85,16 +103,33 @@ observe({
    newdf = newdf[newdf$hap %in% okh$hap,]
 #   print(head(newdf))
 #save(newdf, file="newdf.rda")
-   gg = ggplot(newdf, aes(x=factor(hap), y=quant, colour=factor(hap))) + 
-     geom_boxplot() + geom_jitter() + 
+   gg = ggplot(newdf, aes(x=factor(hap), y=quant)) + 
+     geom_boxplot(data=newdf, aes(x=factor(hap)), outlier.size=0) + geom_jitter(aes(colour=pop)) + 
      ggtitle(paste(input$gene, "expression")) +
-     xlab(paste0(snvec, collapse=", "))
+     xlab(paste0(snvec, collapse=", ")) + 
+       theme(axis.text.x=element_text(angle=45, hjust=1))
 #
    pdf("abc.pdf")
    gg
    dev.off()
    output$box = renderPlot(gg)
    })
+ output$sessinf = renderPrint({
+   sessionInfo()
+   })
+
+# handle stop button
+     observeEvent(input$stopBtn, {
+       ans = NULL
+       if (length(input$gene)>0) {
+           nrtab_gr = goodtab()
+           ans = cbind(gene=input$gene, 
+              radius=input$radius, as.data.frame(nrtab_gr))
+        }   
+       stopApp(returnValue=ans)
+       })  
+  output$demoplot = renderPlot({  plotDemo() })
+
 
 
  }

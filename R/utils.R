@@ -44,6 +44,7 @@ filter_haptab = function(haptab=BiocRnaHap::NA06986_rnahaps,
 #' @param min_total_reads numeric(1) lower bound on number of reads needed to retain a haplotype
 #' @param min_variants lower bound on number of variants in the haplotype to warrant retention
 #' @param varnum_to_use the values of the 'variants' field for which records are retained
+#' @note grep() is used with fixed=TRUE to find sym in genes()$gene_name
 #' @examples
 #' rnahapsNearGene("GSDMB")
 #' @export
@@ -51,7 +52,7 @@ rnahapsNearGene = function(sym, haptab=NA06986_rnahaps,
        genes=ensembldb::genes(EnsDb.Hsapiens.v75::EnsDb.Hsapiens.v75),
        radius=10000, min_total_reads=15, min_variants=2, 
        varnum_to_use = 2:6) {
- ind = grep(sym,genes$gene_name)
+ ind = grep(sym,genes$gene_name,fixed=TRUE)
  if (length(ind)==0) stop("sym not found")
  if (length(ind)>1) {
     warning("multiple representations of symbol, using first")
