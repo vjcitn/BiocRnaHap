@@ -12,6 +12,10 @@ geuvEvH(sym = "GSDMB", snps = c("rs2305480", "rs2305479"),
 \item{sym}{a character(1) gene symbol}
 
 \item{snps}{a vector of SNP identifiers}
+
+\item{vcf}{a CompressedVcf instance from VariantAnnotation}
+
+\item{\dots}{not currently used}
 }
 \description{
 compute a data.frame with GEUVADIS expression for a selected gene
