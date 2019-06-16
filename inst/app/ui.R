@@ -42,9 +42,9 @@ ui = fluidPage(
    helpText("BiocRnaHap app for exploring", a(
      href='https://github.com/secastel/phaser/tree/master/phaser',"'phASER' results")),
    helpText("See the 'about' tab for all details.  Patience is required as numerous annotation and experimental resources are assembled to combine
-inferred haplotypes with expression data.  Specifically, gene symbol
-processing takes time, wait until the selector box below has a
-white background."),
+inferred haplotypes with expression data.  After first
+haplotypes are acquired, subsequent gene selections should
+proceed more rapidly."),
 #   uiOutput("selector"),
 #   selectInput("gene", "gene", choices=genes_avail, selected="ORMDL3"),
    textInput("gene", "gene", value="ORMDL3"),
