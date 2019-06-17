@@ -147,7 +147,7 @@ print(oksn)
         }   
        stopApp(returnValue=ans)
        })  
-  output$demoplot = renderPlot({  plotDemo() })
+  output$demoplot = renderPlot({  BiocRnaHap::plotDemo() })
 
 
 
